@@ -61,7 +61,7 @@ app.use('*', (req, res) => {
   res.status(404).send({ message: 'Обращение по неизвестному адресу' });
 });
 app.use((err, req, res, next) => {
-  // console.log(err.message);
+  console.log(err.name);
   if (err.statusCode || err.code || err.name) {
     if (err.name === 'JsonWebTokenError') {
       res.status(401).send({ message: 'Необходима авторизация, срок действия токена истек' });
@@ -70,6 +70,8 @@ app.use((err, req, res, next) => {
     } else if (err.name === 'CastError' || err.name === 'ValidationError') {
       // console.log(req.user._id);
       res.status(400).send({ message: 'Переданы некорректные данные в методы создания карточки, пользователя, обновления аватара пользователя или профиля' });
+    } else if (err.name === 'TokenExpiredError') {
+      res.status(401).send({ message: 'Срок действия токена истек, необходима авторизация' });
     } else {
       res.status(err.statusCode).send({ message: err.message });
     }
