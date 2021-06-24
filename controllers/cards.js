@@ -1,11 +1,24 @@
 const Card = require('../models/card');
 const { NotFoundError } = require('../errors/errors');
 
+function errHandler(err, req, res, next) {
+  if (err.name === 'MongoError' && err.code === 11000) {
+    err.statusCode = 409;
+    err.message = 'Такой пользователь уже существует';
+  } else if (err.name === 'CastError' || err.name === 'ValidationError') {
+    err.statusCode = 400;
+    err.message = 'Переданы некорректные данные в методы создания карточки, пользователя, обновления аватара пользователя или профиля';
+  }
+}
+
 module.exports.getCards = (req, res, next) => {
   Card.find({})
     .populate('user')
     .then((card) => res.send({ data: card }))
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };
 
 module.exports.deleteCards = (req, res, next) => {
@@ -21,14 +34,20 @@ module.exports.deleteCards = (req, res, next) => {
       }
       throw new NotFoundError('Карточка не найдена');
     })
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };
 
 module.exports.createCards = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };
 
 module.exports.likeCard = (req, res, next) => {
@@ -43,7 +62,10 @@ module.exports.likeCard = (req, res, next) => {
       }
       throw new NotFoundError('Карточка не найдена');
     })
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };
 
 module.exports.dislikeCard = (req, res, next) => {
@@ -58,5 +80,8 @@ module.exports.dislikeCard = (req, res, next) => {
       }
       throw new NotFoundError('Карточка не найдена');
     })
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };

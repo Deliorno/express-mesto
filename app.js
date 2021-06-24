@@ -61,23 +61,15 @@ app.use('*', (req, res) => {
   res.status(404).send({ message: 'Обращение по неизвестному адресу' });
 });
 app.use((err, req, res, next) => {
-  console.log(err.name);
-  if (err.statusCode || err.code || err.name) {
-    if (err.name === 'JsonWebTokenError') {
-      res.status(401).send({ message: 'Необходима авторизация, срок действия токена истек' });
-    } else if (err.name === 'MongoError' && err.code === 11000) {
-      res.status(409).send({ message: 'Такой пользователь уже существует' });
-    } else if (err.name === 'CastError' || err.name === 'ValidationError') {
-      // console.log(req.user._id);
-      res.status(400).send({ message: 'Переданы некорректные данные в методы создания карточки, пользователя, обновления аватара пользователя или профиля' });
-    } else if (err.name === 'TokenExpiredError') {
-      res.status(401).send({ message: 'Срок действия токена истек, необходима авторизация' });
-    } else {
-      res.status(err.statusCode).send({ message: err.message });
-    }
-  } else {
-    res.status(500).send({ message: err.message });
-  }
+  const { statusCode = 500, message } = err;
+  res
+    .status(statusCode)
+    .send({
+      // проверяем статус и выставляем сообщение в зависимости от него
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message
+    });
 });
 
 app.listen(PORT, () => {

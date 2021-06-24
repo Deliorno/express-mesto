@@ -5,6 +5,7 @@
     "eqeqeq":["error", "smart"],
     "max-classes-per-file": ["error", 4],
     "no-unused-vars": ["error", { "args": "none" }],
-    "comma-dangle": ["error", "never"]
+    "comma-dangle": ["error", "never"],
+    "no-param-reassign": ["error", { "props": false }]
   }
 }

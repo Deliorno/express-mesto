@@ -6,10 +6,23 @@ const { NotFoundError } = require('../errors/errors');
 
 const { JWT_SECRET } = process.env;
 
+function errHandler(err, req, res, next) {
+  if (err.name === 'MongoError' && err.code === 11000) {
+    err.statusCode = 409;
+    err.message = 'Такой пользователь уже существует';
+  } else if (err.name === 'CastError' || err.name === 'ValidationError') {
+    err.statusCode = 400;
+    err.message = 'Переданы некорректные данные в методы создания карточки, пользователя, обновления аватара пользователя или профиля';
+  }
+}
+
 module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((user) => res.send({ data: user }))
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };
 
 module.exports.getUsersById = (req, res, next) => {
@@ -20,7 +33,10 @@ module.exports.getUsersById = (req, res, next) => {
       }
       throw new NotFoundError('Нет пользователя с таким id');
     })
-    .catch((err) => next(err)); // добавили catch .catch(err => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    }); // добавили catch .catch(err => next(err));
 };
 
 module.exports.login = (req, res, next) => {
@@ -28,11 +44,14 @@ module.exports.login = (req, res, next) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '5s' });
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '30d' });
       // вернём токен
       res.send({ token });
     })
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };
 
 module.exports.createUsers = (req, res, next) => {
@@ -49,7 +68,10 @@ module.exports.createUsers = (req, res, next) => {
         password: hash // записываем хеш в базу
       }))
       .then((user) => res.send({ data: user }))
-      .catch((err) => { next(err); });
+      .catch((err) => {
+        errHandler(err);
+        next(err);
+      });
   } else {
     res.send('Введите корректный email');
   }
@@ -64,7 +86,10 @@ module.exports.patchInfo = (req, res, next) => {
       }
       throw new NotFoundError('Нет пользователя с таким id');
     })
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };
 
 module.exports.getUsersMe = (req, res, next) => {
@@ -75,7 +100,10 @@ module.exports.getUsersMe = (req, res, next) => {
       }
       throw new NotFoundError('Нет пользователя с таким id');
     })
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };
 
 module.exports.patchAvatar = (req, res, next) => {
@@ -87,5 +115,8 @@ module.exports.patchAvatar = (req, res, next) => {
       }
       throw new NotFoundError('Нет пользователя с таким id');
     })
-    .catch((err) => next(err));
+    .catch((err) => {
+      errHandler(err);
+      next(err);
+    });
 };
