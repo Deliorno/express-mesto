@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { NotFoundError } = require('../errors/errors');
 
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET = 'super secret key' } = process.env;
 
 function errHandler(err, req, res, next) {
   if (err.name === 'MongoError' && err.code === 11000) {
